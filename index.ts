@@ -24,3 +24,33 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     }
     return undefined;
 }
+
+export function formatDateTime(isoString: string): string {
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    });
+}
+
+export function formatDate(isoString: string): string {
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+}
+
+export function formatTime(isoString: string): string {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString("en-GB", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    });
+}
