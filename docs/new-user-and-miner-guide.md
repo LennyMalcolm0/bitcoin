@@ -51,7 +51,7 @@ Use this checklist when reviewing PRs for this guide:
 Quick verify:
 ```bash
 bun install
-bun run blockchain-demo.ts
+bun run index.ts
 ```
 
 ## 8) Common troubleshooting
