@@ -34,3 +34,23 @@ This document proposes a minimal roadmap for the next phase after validating the
 - `bun run blockchain-demo.ts` still works.
 - Each milestone ships with at least one runnable validation/demo step.
 - Clear README pointers for running and verifying each milestone.
+
+## Review Package (for bounty evaluation)
+To reduce review turnaround, the implementation should be submitted as four small PRs that map 1:1 to milestones.
+
+Per PR, include:
+- Scope statement (what is in/out for the milestone)
+- Repro steps (`bun install` then the exact run command)
+- Expected output snapshot (short terminal output snippet)
+- Risks and rollback note (how to revert safely if behavior regresses)
+
+### Suggested validation commands
+```bash
+bun install
+bun run blockchain-demo.ts
+```
+
+For milestone PRs that add tests, also run:
+```bash
+bun test
+```
