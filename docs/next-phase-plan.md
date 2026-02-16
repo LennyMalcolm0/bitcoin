@@ -31,7 +31,7 @@ This document proposes a minimal roadmap for the next phase after validating the
 - **M4 (small PR):** Persistence + startup recovery
 
 ## Acceptance Criteria
-- `bun run blockchain-demo.ts` still works.
+- `bun run index.ts` works on a fresh install.
 - Each milestone ships with at least one runnable validation/demo step.
 - Clear README pointers for running and verifying each milestone.
 
@@ -47,7 +47,7 @@ Per PR, include:
 ### Suggested validation commands
 ```bash
 bun install
-bun run blockchain-demo.ts
+bun run index.ts
 ```
 
 For milestone PRs that add tests, also run:
