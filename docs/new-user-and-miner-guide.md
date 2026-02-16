@@ -40,3 +40,21 @@ Expected behavior:
 - Add transaction data into mined blocks.
 - Add mempool handling.
 - Add chain persistence and restart recovery.
+
+## 7) Reviewer-friendly verification checklist
+Use this checklist when reviewing PRs for this guide:
+- Fresh clone + install succeeds.
+- Demo command runs without manual file edits.
+- Guide sections match actual command/file names.
+- "Expected behavior" output stays accurate after recent changes.
+
+Quick verify:
+```bash
+bun install
+bun run blockchain-demo.ts
+```
+
+## 8) Common troubleshooting
+- `bun: command not found`: install Bun and restart terminal.
+- Demo output differs: pull latest `main`, then rerun install + demo.
+- Local edits break flow: stash/reset local changes before retrying.
