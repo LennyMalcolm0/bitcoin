@@ -3,11 +3,9 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-// Ensure logs directory exists
+// Ensure logs directory exists - Atomic creation to prevent TOCTOU race conditions
 const logDir = 'logs';
-if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
-}
+fs.mkdirSync(logDir, { recursive: true });
 
 /**
  * Michael Sovereign Logging System
@@ -34,7 +32,7 @@ export const logger = winston.createLogger({
 /**
  * Global Error Handler Middleware
  */
-export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const globalErrorHandler = (err: Error | any, req: Request, res: Response, next: NextFunction) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 
@@ -55,7 +53,6 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
 
 /**
  * Safely extracts a field value from an object of unknown type.
- * Removed unnecessary try/catch block as per audit findings.
  */
 export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     if (typeof obj !== "object" || !obj) {
@@ -69,7 +66,6 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
 
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
- * Implemented safe unknown error handling in catch block.
  */
 export function moneyFormat(
     value: number | string | bigint,
