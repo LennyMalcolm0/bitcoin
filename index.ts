@@ -32,7 +32,7 @@ export const logger = winston.createLogger({
 /**
  * Global Error Handler Middleware
  */
-export const globalErrorHandler = (err: Error | any, req: Request, res: Response, next: NextFunction) => {
+export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 

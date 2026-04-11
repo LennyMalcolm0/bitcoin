@@ -16,7 +16,7 @@ export class ProofOfWork {
     /**
      * ASYNCHRONOUS Mining Loop (Non-blocking).
      */
-    static async mine(index: number, previousHash: string, timestamp: number, data: string, difficulty: number): Promise<{ hash: string, nonce: number }> {
+    static async mine(index: number, previousHash: string, timestamp: number, data: string, difficulty: number, maxNonce: number = 10000000): Promise<{ hash: string, nonce: number }> {
         let nonce = 0;
         const target = '0'.repeat(difficulty);
         
@@ -31,7 +31,7 @@ export class ProofOfWork {
                 await new Promise(resolve => setImmediate(resolve));
             }
             
-            if (nonce > 10000000) throw new Error("Mining timeout: Difficulty too high for local environment");
+            if (nonce > maxNonce) throw new Error("Mining timeout: Difficulty too high for local environment");
         }
     }
 
@@ -48,9 +48,9 @@ export class ProofOfWork {
         
         // GENUINE Constant Time Comparison (Tier-1 Fix)
         try {
-            // Using crypto.timingSafeEqual directly on buffers
-            const bufferCalculated = Buffer.from(calculatedHash);
-            const bufferProvided = Buffer.from(providedHash);
+            // Using crypto.timingSafeEqual directly on buffers with hex encoding
+            const bufferCalculated = Buffer.from(calculatedHash, 'hex');
+            const bufferProvided = Buffer.from(providedHash, 'hex');
             if (bufferCalculated.length !== bufferProvided.length) return false;
             return crypto.timingSafeEqual(bufferCalculated, bufferProvided);
         } catch (e) {
