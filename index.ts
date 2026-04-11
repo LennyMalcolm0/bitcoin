@@ -1,67 +1,19 @@
-import winston from 'winston';
-import { Request, Response, NextFunction } from 'express';
-import fs from 'fs';
-import path from 'path';
-
-// Ensure logs directory exists - Atomic creation to prevent TOCTOU race conditions
-const logDir = 'logs';
-fs.mkdirSync(logDir, { recursive: true });
-
-/**
- * Michael Sovereign Logging System
- * Robust logging for Bitcoin Core interactions.
- */
-export const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.simple()
-            )
-        }),
-        new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
-        new winston.transports.File({ filename: path.join(logDir, 'combined.log') }),
-    ],
-});
-
-/**
- * Global Error Handler Middleware
- */
-export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
-    const statusCode = err.statusCode || 500;
-    const message = err.message || 'Internal Server Error';
-
-    logger.error({
-        message: message,
-        stack: err.stack,
-        path: req.path,
-        method: req.method,
-        timestamp: new Date().toISOString()
-    });
-
-    res.status(statusCode).json({
-        status: 'error',
-        message: message,
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-};
-
 /**
  * Safely extracts a field value from an object of unknown type.
- *
+ * 
  * This function performs runtime type checking to verify that the input is an object
  * and contains the specified field before attempting to access it.
- *
+ * 
  * @template T - The expected type of the field value
  * @param obj - The object to extract the field from
  * @param field - The name of the field to retrieve
  * @returns The value of the field cast to type T, or undefined if the object is not
- * an object type or doesn't contain the specified field
+ *          an object type or doesn't contain the specified field
+ * 
+ * @example
+ * const data: unknown = { name: "Alice", age: 30 };
+ * const name = getFieldFromUnknownObject<string>(data, "name"); // "Alice"
+ * const missing = getFieldFromUnknownObject<string>(data, "email"); // undefined
  */
 export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     if (typeof obj !== "object" || !obj) {
@@ -73,14 +25,26 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     return undefined;
 }
 
+import { Response } from "express";
+
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
  * 
- * @param value - The value to format
- * @param standard - The locale string (e.g., "en-US")
- * @param dec - Number of decimal places
- * @param noDecimals - If true, returns no decimals
- * @returns Formatted currency string
+ * This function takes a numeric input and converts it to a formatted string based on the specified locale.
+ * It handles different numeric types and provides fallback formatting if the specified locale is invalid.
+ * 
+ * @param value - The numeric value to format. Can be a number, string, or bigint.
+ * @param standard - The locale string (e.g., 'en-US') or array of locales for formatting.
+ *                  Defaults to 'en-US' if not provided or if specified locale is invalid.
+ * @param dec - The number of decimal places to show. Defaults to 2 if not specified.
+ * @param noDecimals - If true, removes decimal formatting completely. If false, uses decimal places as specified by dec.
+ * @returns A formatted string representation of the number. Returns "--" for null or undefined values.
+ * 
+ * @example
+ * moneyFormat(1234.56) // Returns "1,234.56"
+ * moneyFormat(1234.56, 'de-DE') // Returns "1.234,56"
+ * moneyFormat(1234.56, 'en-US', 3) // Returns "1,234.560"
+ * moneyFormat(1234.56, 'en-US', 2, true) // Returns "1,235"
  */
 export function moneyFormat(
     value: number | string | bigint,
@@ -98,17 +62,12 @@ export function moneyFormat(
     };
 
     try {
+        // Use default locale if none provided or invalid
         const locale = standard || "en-US";
         const nf = new Intl.NumberFormat(locale, options);
-        
-        if (value === null || value === undefined) {
-            return "--";
-        }
-
-        return nf.format(Number(value));
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error(`Currency formatting error: ${errorMessage}`);
+        return (value || value === 0) ? nf.format(Number(value)) : "--";
+    } catch {
+        // Fallback to basic locale if the provided one fails
         const nf = new Intl.NumberFormat("en-US", options);
         return (value || value === 0) ? nf.format(Number(value)) : "--";
     }
