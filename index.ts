@@ -1,5 +1,13 @@
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
+import fs from 'fs';
+import path from 'path';
+
+// Ensure logs directory exists
+const logDir = 'logs';
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir);
+}
 
 /**
  * Michael Sovereign Logging System
@@ -18,14 +26,13 @@ export const logger = winston.createLogger({
                 winston.format.simple()
             )
         }),
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
+        new winston.transports.File({ filename: path.join(logDir, 'combined.log') }),
     ],
 });
 
 /**
  * Global Error Handler Middleware
- * Catches all unhandled exceptions in the Express pipeline.
  */
 export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     const statusCode = err.statusCode || 500;
@@ -48,27 +55,21 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
 
 /**
  * Safely extracts a field value from an object of unknown type.
- * 
- * This function performs runtime type checking to verify that the input is an object
- * and contains the specified field before attempting to access it.
+ * Removed unnecessary try/catch block as per audit findings.
  */
 export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
-    try {
-        if (typeof obj !== "object" || !obj) {
-            return undefined;
-        }
-        if (field in obj) {
-            return (obj as Record<string, T>)[field];
-        }
-        return undefined;
-    } catch (error) {
-        logger.warn(`Failed to extract field ${field} from object`);
+    if (typeof obj !== "object" || !obj) {
         return undefined;
     }
+    if (field in obj) {
+        return (obj as Record<string, T>)[field];
+    }
+    return undefined;
 }
 
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
+ * Implemented safe unknown error handling in catch block.
  */
 export function moneyFormat(
     value: number | string | bigint,
@@ -95,7 +96,8 @@ export function moneyFormat(
 
         return nf.format(Number(value));
     } catch (error) {
-        logger.error(`Currency formatting error: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(`Currency formatting error: ${errorMessage}`);
         const nf = new Intl.NumberFormat("en-US", options);
         return (value || value === 0) ? nf.format(Number(value)) : "--";
     }
