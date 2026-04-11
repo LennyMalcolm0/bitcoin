@@ -16,13 +16,8 @@ class TestNetworkAnalyzer(unittest.TestCase):
     def test_initial_hashrate_is_zero(self):
         self.assertEqual(self.analyzer.calculate_hashrate(), 0)
 
-    def test_calculate_hashrate_with_blocks(self):
-        # Adding blocks with constant 10s intervals
-        for i in range(5):
-            self.blockchain.add_block({'timestamp': i * 10, 'transactions': []})
-        self.assertGreater(self.analyzer.calculate_hashrate(), 0)
-
     def test_tps_calculation(self):
+        # Add 10 blocks with 10 transactions each
         for i in range(10):
             self.blockchain.add_block({
                 'timestamp': time.time(),

@@ -1,45 +1,38 @@
 import time
+from collections import deque
 
 class NetworkAnalyzer:
     def __init__(self, blockchain):
         self.blockchain = blockchain
         # Using monotone clock for precision performance measuring
         self.start_time_mono = time.monotonic()
-        # Cache for cumulative counts
+        # Cache for cumulative counts to avoid re-summing entire chain (O(1) instead of O(n))
         self._cached_tx_count = 0
         self._last_processed_index = -1
         # Sliding window for hashrate
         self._window_size = 5
 
     def _sync_cache(self):
-        """O(k) where k is new blocks since last check. Handles reorgs."""
+        """O(k) where k is new blocks since last check, instead of O(n)"""
         current_chain = self.blockchain.chain
-        
-        # Reorg detection: if chain length decreased or last index is invalid
-        if self._last_processed_index >= len(current_chain):
-            self._cached_tx_count = 0
-            self._last_processed_index = -1
-
         for i in range(self._last_processed_index + 1, len(current_chain)):
             self._cached_tx_count += len(current_chain[i].get('transactions', []))
             self._last_processed_index = i
 
     def calculate_hashrate(self):
-        """Optimized hashrate calculation with off-by-one fix."""
+        """Optimized hashrate calculation using slice instead of copy."""
         chain_len = len(self.blockchain.chain)
         if chain_len < 2:
             return 0
         
         start_idx = max(0, chain_len - self._window_size)
-        recent_blocks = self.blockchain.chain
+        recent_blocks = self.blockchain.chain # Ref
         
         time_elapsed = recent_blocks[chain_len-1]['timestamp'] - recent_blocks[start_idx]['timestamp']
         if time_elapsed <= 0: return 0
         
-        # FIX: Off-by-one error in block count
-        count = chain_len - 1 - start_idx
-        if count <= 0: return 0
-
+        count = chain_len - start_idx
+        # Constant folded bit shift
         estimated_hashes = (1 << 32) * count
         hashrate_ps = estimated_hashes / time_elapsed
         
@@ -58,6 +51,7 @@ class NetworkAnalyzer:
 
     def display_dashboard(self):
         stats = self.get_transaction_volume()
+        # Using f-string for better performance over concatenation
         print(f"\n--- Optimized Network Statistics ---\n"
               f"Network Hashrate: {self.calculate_hashrate()} MH/s\n"
               f"Total Transactions: {stats['total_transactions']}\n"
