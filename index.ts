@@ -1,14 +1,80 @@
+import winston from 'winston';
+import { Request, Response, NextFunction } from 'express';
+import fs from 'fs';
+import path from 'path';
+
+// Ensure logs directory exists - Atomic creation to prevent TOCTOU race conditions
+const logDir = 'logs';
+try {
+    fs.mkdirSync(logDir, { recursive: true });
+} catch (error) {
+    console.warn(`Failed to create log directory: ${error instanceof Error ? error.message : String(error)}`);
+}
+
+/**
+ * Michael Sovereign Logging System
+ * Robust logging for Bitcoin Core interactions.
+ */
+export const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    transports: [
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.simple()
+            )
+        }),
+        new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
+        new winston.transports.File({ filename: path.join(logDir, 'combined.log') }),
+    ],
+});
+
+/**
+ * Global Error Handler Middleware
+ * 
+ * @param err - The error object, potentially including a statusCode
+ * @param req - The Express request object
+ * @param res - The Express response object
+ * @param next - The Express next function
+ */
+export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+
+    logger.error({
+        message: message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method,
+        timestamp: new Date().toISOString()
+    });
+
+    res.status(statusCode).json({
+        status: 'error',
+        message: message,
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+};
+
 /**
  * Safely extracts a field value from an object of unknown type.
- * 
+ *
  * This function performs runtime type checking to verify that the input is an object
  * and contains the specified field before attempting to access it.
- * 
+ *
  * @template T - The expected type of the field value
  * @param obj - The object to extract the field from
  * @param field - The name of the field to retrieve
  * @returns The value of the field cast to type T, or undefined if the object is not
- *          an object type or doesn't contain the specified field
+ * an object type or doesn't contain the specified field
  * 
  * @example
  * const data: unknown = { name: "Alice", age: 30 };
@@ -24,8 +90,6 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     }
     return undefined;
 }
-
-import { Response } from "express";
 
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
@@ -47,7 +111,7 @@ import { Response } from "express";
  * moneyFormat(1234.56, 'en-US', 2, true) // Returns "1,235"
  */
 export function moneyFormat(
-    value: number | string | bigint,
+    value: number | string | bigint | null | undefined,
     standard?: string | string[],
     dec?: number,
     noDecimals?: boolean
@@ -62,13 +126,18 @@ export function moneyFormat(
     };
 
     try {
-        // Use default locale if none provided or invalid
         const locale = standard || "en-US";
         const nf = new Intl.NumberFormat(locale, options);
-        return (value || value === 0) ? nf.format(Number(value)) : "--";
-    } catch {
-        // Fallback to basic locale if the provided one fails
+        
+        if (value === null || value === undefined) {
+            return "--";
+        }
+
+        return nf.format(typeof value === 'bigint' ? value : Number(value));
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(`Currency formatting error: ${errorMessage}`);
         const nf = new Intl.NumberFormat("en-US", options);
-        return (value || value === 0) ? nf.format(Number(value)) : "--";
+        return (value || value === 0) ? nf.format(typeof value === "bigint" ? value : Number(value)) : "--";
     }
 }
