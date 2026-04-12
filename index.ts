@@ -5,7 +5,11 @@ import path from 'path';
 
 // Ensure logs directory exists - Atomic creation to prevent TOCTOU race conditions
 const logDir = 'logs';
-fs.mkdirSync(logDir, { recursive: true });
+try {
+    fs.mkdirSync(logDir, { recursive: true });
+} catch (error) {
+    console.warn(`Failed to create log directory: ${error instanceof Error ? error.message : String(error)}`);
+}
 
 /**
  * Michael Sovereign Logging System
