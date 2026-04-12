@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 /**
- * SOVEREIGN CRYPTO ENGINE: Proof of Work Implementation (V3.3)
+ * SOVEREIGN CRYPTO ENGINE: Proof of Work Implementation (V3.4)
  * Hardened against Timing Attacks & fully optimized for production.
  */
 export class ProofOfWork {
@@ -36,7 +36,7 @@ export class ProofOfWork {
     }
 
     /**
-     * FULL INTEGRITY VERIFICATION (V3.3 Fix)
+     * FULL INTEGRITY VERIFICATION (V3.4 Fix)
      * Implements crypto.timingSafeEqual for genuine protection against timing attacks.
      */
     static verify(index: number, previousHash: string, timestamp: number, data: string, nonce: number, difficulty: number, providedHash: string): boolean {
@@ -47,14 +47,13 @@ export class ProofOfWork {
         const calculatedHash = this.calculateHash(index, previousHash, timestamp, data, nonce);
         
         // GENUINE Constant Time Comparison (Tier-1 Fix)
-        try {
-            // Using crypto.timingSafeEqual directly on buffers with hex encoding
-            const bufferCalculated = Buffer.from(calculatedHash, 'hex');
-            const bufferProvided = Buffer.from(providedHash, 'hex');
-            if (bufferCalculated.length !== bufferProvided.length) return false;
-            return crypto.timingSafeEqual(bufferCalculated, bufferProvided);
-        } catch (e) {
+        const bufferCalculated = Buffer.from(calculatedHash, 'hex');
+        const bufferProvided = Buffer.from(providedHash, 'hex');
+
+        if (bufferCalculated.length !== bufferProvided.length) {
             return false;
         }
+
+        return crypto.timingSafeEqual(bufferCalculated, bufferProvided);
     }
 }
