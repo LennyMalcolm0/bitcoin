@@ -31,8 +31,13 @@ export const logger = winston.createLogger({
 
 /**
  * Global Error Handler Middleware
+ * 
+ * @param err - The error object, potentially including a statusCode
+ * @param req - The Express request object
+ * @param res - The Express response object
+ * @param next - The Express next function
  */
-export const globalErrorHandler = (err: Error | any, req: Request, res: Response, next: NextFunction) => {
+export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 
@@ -53,6 +58,15 @@ export const globalErrorHandler = (err: Error | any, req: Request, res: Response
 
 /**
  * Safely extracts a field value from an object of unknown type.
+ *
+ * This function performs runtime type checking to verify that the input is an object
+ * and contains the specified field before attempting to access it.
+ *
+ * @template T - The expected type of the field value
+ * @param obj - The object to extract the field from
+ * @param field - The name of the field to retrieve
+ * @returns The value of the field cast to type T, or undefined if the object is not
+ * an object type or doesn't contain the specified field
  */
 export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     if (typeof obj !== "object" || !obj) {
@@ -66,6 +80,12 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
 
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
+ * 
+ * @param value - The value to format
+ * @param standard - The locale string (e.g., "en-US")
+ * @param dec - Number of decimal places
+ * @param noDecimals - If true, returns no decimals
+ * @returns Formatted currency string
  */
 export function moneyFormat(
     value: number | string | bigint,
