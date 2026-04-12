@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose --ci --no-cache",
+    "test": "jest --verbose --ci --no-cache && npm run test:py",
     "test:py": "python3 -m unittest discover tests"
   },
   "keywords": [

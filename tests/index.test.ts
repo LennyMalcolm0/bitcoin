@@ -1,9 +1,5 @@
 import { logger, getFieldFromUnknownObject, moneyFormat } from '../index';
 
-const describe = (global as any).describe;
-const test = (global as any).test;
-const expect = (global as any).expect;
-
 describe('Utility Functions', () => {
     test('getFieldFromUnknownObject returns correct field', () => {
         const data = { name: 'Sovereign', value: 100 };
