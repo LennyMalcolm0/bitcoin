@@ -8,7 +8,6 @@ class NetworkAnalyzer:
         # Cache for cumulative counts to avoid re-summing entire chain (O(1) instead of O(n))
         self._cached_tx_count = 0
         self._last_processed_index = -1
-        self._last_processed_hash = None
         # Sliding window for hashrate
         self._window_size = 5
 
@@ -16,21 +15,14 @@ class NetworkAnalyzer:
         """O(k) where k is new blocks since last check, instead of O(n)"""
         current_chain = self.blockchain.chain
         
-        # Handle blockchain reorganizations safely by checking the last processed block hash
-        is_reorg = len(current_chain) <= self._last_processed_index
-        if not is_reorg and self._last_processed_index >= 0:
-            if current_chain[self._last_processed_index].get('hash') != self._last_processed_hash:
-                is_reorg = True
-
-        if is_reorg:
+        # Handle blockchain reorganizations
+        if len(current_chain) <= self._last_processed_index:
             self._cached_tx_count = 0
             self._last_processed_index = -1
-            self._last_processed_hash = None
 
         for i in range(self._last_processed_index + 1, len(current_chain)):
             self._cached_tx_count += len(current_chain[i].get('transactions', []))
             self._last_processed_index = i
-            self._last_processed_hash = current_chain[i].get('hash')
 
     def calculate_hashrate(self):
         """Optimized hashrate calculation with reorg safety."""
