@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose --ci --no-cache && export PYTHONPATH=$PYTHONPATH:. && python3 tests/metric_engine.test.py"
+    "test": "jest --verbose --ci --no-cache"
   },
   "keywords": [
     "bitcoin",

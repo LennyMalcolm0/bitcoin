@@ -138,6 +138,10 @@ export function moneyFormat(
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error(`Currency formatting error: ${errorMessage}`);
         const nf = new Intl.NumberFormat("en-US", options);
+<<<<<<< Updated upstream
         return (value || value === 0) ? nf.format(Number(value)) : "--";
+=======
+        return (value || value === 0) ? nf.format(typeof value === 'bigint' ? value : Number(value)) : "--";
+>>>>>>> Stashed changes
     }
 }
