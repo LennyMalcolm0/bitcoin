@@ -1,9 +1,5 @@
 import { ProofOfWork } from '../pow_engine';
 
-const describe = (global as any).describe;
-const test = (global as any).test;
-const expect = (global as any).expect;
-
 describe('ProofOfWork Engine', () => {
     test('calculateHash returns a valid SHA-256 string', () => {
         const hash = ProofOfWork.calculateHash(0, "0", 12345, "data", 0);
