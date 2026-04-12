@@ -1,24 +1,32 @@
 {
   "name": "bitcoin_lenny",
   "version": "1.0.0",
-  "description": "",
+  "description": "Optimized Bitcoin Engine by Michael Sovereign",
   "main": "index.js",
   "scripts": {
-    "test": "jest --passWithNoTests"
+    "build": "tsc",
+    "test": "jest --verbose --ci --no-cache && export PYTHONPATH=$PYTHONPATH:. && python3 tests/metric_engine.test.py"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "bitcoin",
+    "pow",
+    "metrics",
+    "logging"
+  ],
+  "author": "Michael Sovereign",
   "license": "ISC",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
-    "@types/express": "^5.0.6",
     "express": "^5.2.1",
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/node": "^22.13.10",
     "jest": "^30.3.0",
     "ts-jest": "^29.4.9",
+    "typescript": "^5.8.2",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
     "eslint": "^10.2.0"

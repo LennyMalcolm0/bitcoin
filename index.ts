@@ -42,6 +42,10 @@ export const logger = winston.createLogger({
  * @param next - The Express next function
  */
 export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 
@@ -71,6 +75,11 @@ export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Re
  * @param field - The name of the field to retrieve
  * @returns The value of the field cast to type T, or undefined if the object is not
  * an object type or doesn't contain the specified field
+ * 
+ * @example
+ * const data: unknown = { name: "Alice", age: 30 };
+ * const name = getFieldFromUnknownObject<string>(data, "name"); // "Alice"
+ * const missing = getFieldFromUnknownObject<string>(data, "email"); // undefined
  */
 export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
     if (typeof obj !== "object" || !obj) {
@@ -85,14 +94,24 @@ export function getFieldFromUnknownObject<T>(obj: unknown, field: string) {
 /**
  * Formats a numeric value into a localized string representation with proper currency formatting.
  * 
- * @param value - The value to format
- * @param standard - The locale string (e.g., "en-US")
- * @param dec - Number of decimal places
- * @param noDecimals - If true, returns no decimals
- * @returns Formatted currency string
+ * This function takes a numeric input and converts it to a formatted string based on the specified locale.
+ * It handles different numeric types and provides fallback formatting if the specified locale is invalid.
+ * 
+ * @param value - The numeric value to format. Can be a number, string, or bigint.
+ * @param standard - The locale string (e.g., 'en-US') or array of locales for formatting.
+ *                  Defaults to 'en-US' if not provided or if specified locale is invalid.
+ * @param dec - The number of decimal places to show. Defaults to 2 if not specified.
+ * @param noDecimals - If true, removes decimal formatting completely. If false, uses decimal places as specified by dec.
+ * @returns A formatted string representation of the number. Returns "--" for null or undefined values.
+ * 
+ * @example
+ * moneyFormat(1234.56) // Returns "1,234.56"
+ * moneyFormat(1234.56, 'de-DE') // Returns "1.234,56"
+ * moneyFormat(1234.56, 'en-US', 3) // Returns "1,234.560"
+ * moneyFormat(1234.56, 'en-US', 2, true) // Returns "1,235"
  */
 export function moneyFormat(
-    value: number | string | bigint,
+    value: number | string | bigint | null | undefined,
     standard?: string | string[],
     dec?: number,
     noDecimals?: boolean
@@ -114,7 +133,7 @@ export function moneyFormat(
             return "--";
         }
 
-        return nf.format(Number(value));
+        return nf.format(typeof value === 'bigint' ? value : Number(value));
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error(`Currency formatting error: ${errorMessage}`);
