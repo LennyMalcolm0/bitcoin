@@ -3,12 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-// Ensure logs directory exists - Atomic creation to prevent TOCTOU race conditions
+// Ensure logs directory exists - Atomic creation with recursive: true natively handles pre-existence
 const logDir = 'logs';
 try {
-    if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-    }
+    fs.mkdirSync(logDir, { recursive: true });
 } catch (error) {
     console.warn(`Failed to create log directory: ${error instanceof Error ? error.message : String(error)}`);
 }
