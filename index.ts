@@ -37,7 +37,7 @@ export const logger = winston.createLogger({
  * @param res - The Express response object
  * @param next - The Express next function
  */
-export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const globalErrorHandler = (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 
