@@ -5,8 +5,8 @@
   "main": "dist/pow_engine.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose --ci --no-cache"
-    "test:py": "python3 -m unittest discover tests",
+    "test": "jest --verbose --ci --no-cache",
+    "test:py": "python3 -m unittest discover tests"
   },
   "keywords": [
     "bitcoin",
